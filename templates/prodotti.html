@@ -4,79 +4,111 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Offerte Amazon - Prezzo AI Tracker</title>
-    <meta name="description" content="Scopri le migliori offerte Amazon aggiornate in tempo reale con Prezzo AI Tracker. Trova sconti su elettronica, laptop, smartphone e molto altro.">
-    <meta name="keywords" content="offerte Amazon, sconti Amazon, migliori offerte elettronica, laptop in sconto, smartphone in sconto, monitoraggio prezzi AI">
-    <meta name="author" content="MikroTech">
+    <meta name="description" content="Scopri le migliori offerte Amazon aggiornate in tempo reale con Prezzo AI Tracker.">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 0; background: #f9f9f9; }
-        header { background: #0073e6; color: white; padding: 20px; font-size: 24px; }
-        .container { padding: 20px; max-width: 1100px; margin: auto; }
-        .product-list { display: flex; flex-wrap: wrap; justify-content: center; }
-        .product { border: 1px solid #ddd; padding: 15px; margin: 10px; width: 250px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); text-align: center; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f9f9f9; }
+        header { background: #0073e6; color: white; padding: 20px; font-size: 24px; text-align: center; }
+        .container { padding: 20px; max-width: 1200px; margin: auto; }
+        .filters { display: flex; justify-content: space-between; margin: 15px 0; }
+        .product-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+        .product { border: 1px solid #ddd; padding: 15px; width: 250px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); text-align: center; }
         .product img { width: 100%; height: auto; border-radius: 8px; }
-        .button { background: #ff9900; color: white; padding: 10px 15px; text-decoration: none; display: block; margin-top: 10px; border-radius: 5px; transition: 0.3s; }
+        .button { background: #ff9900; color: white; padding: 10px; text-decoration: none; display: block; border-radius: 5px; transition: 0.3s; }
         .button:hover { background: #e68a00; transform: scale(1.05); }
-        .disclaimer { font-size: 12px; color: #666; margin-top: 20px; }
-        footer { background: #222; color: white; padding: 10px; margin-top: 20px; font-size: 14px; }
-        nav { background: #444; padding: 10px; }
-        nav a { color: white; margin: 10px; text-decoration: none; font-size: 18px; }
     </style>
 </head>
 <body>
     <header>Offerte Amazon - Prezzo AI Tracker</header>
     
-    <nav>
-        <a href="/">🏠 Home</a>
-        <a href="/software">🖥 Software</a>
-        <a href="/prodotti">🛍 Offerte</a>
-        <a href="/contatti">📩 Contatti</a>
-    </nav>    
-
     <div class="container">
-        <h1>📊 Offerte Amazon in Tempo Reale</h1>
-        <p>Scopri le migliori offerte su elettronica, laptop, smartphone e molto altro.</p>
-
-        <div id="product-list" class="product-list">
-            <p>Caricamento prodotti in corso...</p>
+        <input type="text" id="search" class="search-bar" placeholder="🔍 Cerca un prodotto...">
+        
+        <div class="filters">
+            <select id="categoryFilter">
+                <option value="all">Tutte le categorie</option>
+            </select>
+            <select id="discountFilter">
+                <option value="all">Tutti gli sconti</option>
+                <option value="10">Almeno 10%</option>
+                <option value="20">Almeno 20%</option>
+                <option value="30">Almeno 30%</option>
+            </select>
+            <select id="ratingFilter">
+                <option value="all">Tutte le valutazioni</option>
+                <option value="4">4+ ⭐</option>
+                <option value="4.5">4.5+ ⭐</option>
+                <option value="5">5 ⭐</option>
+            </select>
         </div>
-    </div>
 
-    <div class="disclaimer">
-        <p>📢 <strong>Disclaimer:</strong> In qualità di Affiliato Amazon, guadagniamo dagli acquisti idonei.</p>
+        <div id="product-list" class="product-list">Caricamento prodotti...</div>
     </div>
-
-    <footer>&copy; 2025 Prezzo AI Tracker - Tutti i diritti riservati.</footer>
 
     <script>
-        // ✅ Recupera i prodotti dall'API Flask
-        fetch("http://127.0.0.1:5001/api/prodotti")
-            .then(response => response.json())
-            .then(data => {
-                let productList = document.getElementById("product-list");
-                productList.innerHTML = "";  // Pulisce la lista
+        let productsData = [];
 
-                data.forEach(product => {
-                    let productDiv = document.createElement("div");
-                    productDiv.classList.add("product");
+        async function fetchProducts() {
+            try {
+                let response = await fetch("http://127.0.0.1:5001/api/prodotti");
+                productsData = await response.json();
+                updateCategoryFilter();
+                displayProducts(productsData);
+            } catch (error) {
+                document.getElementById("product-list").innerHTML = "Errore nel caricamento prodotti.";
+            }
+        }
 
-                    let imageUrl = `https://ws-eu.amazon-adsystem.com/widgets/q?_encoding=UTF8&MarketPlace=IT&ASIN=${product.asin}&ServiceVersion=20070822&ID=AsinImage&WS=1&Format=_SL250_`;
-                    
-                    productDiv.innerHTML = `
-                        <img src="${imageUrl}" alt="${product.name}">
-                        <h3>${product.name}</h3>
-                        <p>💰 Prezzo: <strong>€${product.price || "N/D"}</strong></p>
-                        <p>🔻 Sconto: <strong>${product.discount ? product.discount + "%" : "Nessuno"}</strong></p>
-                        <p>⭐ Rating: <strong>${product.rating || "N/D"}</strong></p>
-                        <p>🗣️ Recensioni: <strong>${product.reviews || "Nessuna recensione"}</strong></p>
-                        <a href="${product.affiliate_link}" class="button" target="_blank">🔗 Acquista su Amazon</a>
-                    `;
-                    productList.appendChild(productDiv);
-                });
-            })
-            .catch(error => {
-                console.error("❌ Errore nel caricamento dei prodotti:", error);
-                document.getElementById("product-list").innerHTML = "<p>❌ Errore nel caricamento dei prodotti. Riprova più tardi.</p>";
+        async function fetchCategories() {
+            try {
+                let response = await fetch("http://127.0.0.1:5001/api/categorie");
+                let categories = await response.json();
+                updateCategoryFilter(categories);
+            } catch (error) {
+                console.error("Errore nel caricamento delle categorie", error);
+            }
+        }
+
+        function updateCategoryFilter(categories = []) {
+            let categoryFilter = document.getElementById("categoryFilter");
+            categoryFilter.innerHTML = '<option value="all">Tutte le categorie</option>';
+            categories.forEach(category => {
+                let option = document.createElement("option");
+                option.value = category;
+                option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+                categoryFilter.appendChild(option);
             });
+        }
+
+        function displayProducts(products) {
+            let productList = document.getElementById("product-list");
+            productList.innerHTML = "";
+            products.forEach(product => {
+                let productDiv = document.createElement("div");
+                productDiv.classList.add("product");
+
+                let imageUrl = product.image_url && product.image_url !== "N/A" ? product.image_url : "https://via.placeholder.com/250";
+
+                productDiv.innerHTML = `
+                    <img src="${imageUrl}" alt="${product.name}">
+                    <h3>${product.name || "Prodotto senza nome"}</h3>
+                    <p>💰 Prezzo: <strong>€${product.price || "Non disponibile"}</strong></p>
+                    <p>🔻 Sconto: <strong>${product.discount ? product.discount + "%" : "Nessuno"}</strong></p>
+                    <p>⭐ Rating: <strong>${product.rating || "N/D"}</strong></p>
+                    <p>🗣️ Recensioni: <strong>${product.reviews || "Nessuna recensione"}</strong></p>
+                    <a href="${product.affiliate_link}" class="button" target="_blank">🔗 Acquista su Amazon</a>
+                `;
+                productList.appendChild(productDiv);
+            });
+        }
+
+        document.getElementById("categoryFilter").addEventListener("change", function() {
+            let selectedCategory = this.value;
+            let filteredProducts = selectedCategory === "all" ? productsData : productsData.filter(p => p.category === selectedCategory);
+            displayProducts(filteredProducts);
+        });
+
+        fetchProducts();
+        fetchCategories();
     </script>
 </body>
 </html>
