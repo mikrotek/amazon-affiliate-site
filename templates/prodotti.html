@@ -33,12 +33,7 @@
                 <option value="20">Almeno 20%</option>
                 <option value="30">Almeno 30%</option>
             </select>
-            <select id="ratingFilter">
-                <option value="all">Tutte le valutazioni</option>
-                <option value="4">4+ ⭐</option>
-                <option value="4.5">4.5+ ⭐</option>
-                <option value="5">5 ⭐</option>
-            </select>
+            <button onclick="applyFilters()">🔄 Applica</button>
         </div>
 
         <div id="product-list" class="product-list">Caricamento prodotti...</div>
@@ -48,10 +43,13 @@
         let productsData = [];
 
         async function fetchProducts() {
+            let category = document.getElementById("categoryFilter").value;
+            let discount = document.getElementById("discountFilter").value;
+            let query = `?category=${category !== "all" ? category : ""}&discount=${discount !== "all" ? discount : ""}`;
+            
             try {
-                let response = await fetch("http://127.0.0.1:5001/api/prodotti");
+                let response = await fetch("http://127.0.0.1:5001/api/prodotti" + query);
                 productsData = await response.json();
-                updateCategoryFilter();
                 displayProducts(productsData);
             } catch (error) {
                 document.getElementById("product-list").innerHTML = "Errore nel caricamento prodotti.";
@@ -87,12 +85,16 @@
                 productDiv.classList.add("product");
 
                 let imageUrl = product.image_url && product.image_url !== "N/A" ? product.image_url : "https://via.placeholder.com/250";
+                let discountText = product.discount ? `<p>🔻 Sconto: <strong>${product.discount}%</strong></p>` : "";
+                let offerText = product.offer_text ? `<p style="color:red;">🔥 ${product.offer_text}</p>` : "";
 
                 productDiv.innerHTML = `
                     <img src="${imageUrl}" alt="${product.name}">
                     <h3>${product.name || "Prodotto senza nome"}</h3>
                     <p>💰 Prezzo: <strong>€${product.price || "Non disponibile"}</strong></p>
-                    <p>🔻 Sconto: <strong>${product.discount ? product.discount + "%" : "Nessuno"}</strong></p>
+                    <p>💰 Prezzo originale: <s>€${product.old_price || "N/D"}</s></p>
+                    ${discountText}
+                    ${offerText}
                     <p>⭐ Rating: <strong>${product.rating || "N/D"}</strong></p>
                     <p>🗣️ Recensioni: <strong>${product.reviews || "Nessuna recensione"}</strong></p>
                     <a href="${product.affiliate_link}" class="button" target="_blank">🔗 Acquista su Amazon</a>
@@ -101,11 +103,9 @@
             });
         }
 
-        document.getElementById("categoryFilter").addEventListener("change", function() {
-            let selectedCategory = this.value;
-            let filteredProducts = selectedCategory === "all" ? productsData : productsData.filter(p => p.category === selectedCategory);
-            displayProducts(filteredProducts);
-        });
+        function applyFilters() {
+            fetchProducts();
+        }
 
         fetchProducts();
         fetchCategories();

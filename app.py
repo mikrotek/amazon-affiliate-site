@@ -15,11 +15,19 @@ def home():
 def prodotti():
     """Recupera i prodotti e le categorie dal backend e li invia al template"""
     try:
-        # Recupero prodotti
-        prodotti_response = requests.get(f"{API_BASE_URL}/prodotti")
+        categoria = request.args.get('category')
+        sconto_minimo = request.args.get('discount', type=int, default=0)
+
+        # Richiesta API con filtri
+        params = {}
+        if categoria and categoria != "all":
+            params['category'] = categoria
+        if sconto_minimo > 0:
+            params['discount'] = sconto_minimo
+
+        prodotti_response = requests.get(f"{API_BASE_URL}/prodotti", params=params)
         prodotti = prodotti_response.json() if prodotti_response.status_code == 200 else []
 
-        # Recupero categorie
         categorie_response = requests.get(f"{API_BASE_URL}/categorie")
         categorie = categorie_response.json() if categorie_response.status_code == 200 else []
 
